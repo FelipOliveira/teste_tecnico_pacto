@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.br.foliveira.recrutamento_interno.model.Vaga;
-import com.br.foliveira.recrutamento_interno.repository.IVagaRepository;
+import com.br.foliveira.recrutamento_interno.model.Job;
+import com.br.foliveira.recrutamento_interno.repository.IJobRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,14 +23,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:8081")
-public class VagaControler {
+public class JobControler {
     
-    @Autowired IVagaRepository repository;
+    @Autowired IJobRepository repository;
 
     @GetMapping("/vaga")
-    ResponseEntity<List<Vaga>> getVagas(@RequestParam(required = false) String titulo) {
+    ResponseEntity<List<Job>> getVagas(@RequestParam(required = false) String titulo) {
 	    try {
-	        List<Vaga> vagas = new ArrayList<Vaga>();
+	        List<Job> vagas = new ArrayList<Job>();
 
 	        if (titulo == null)
 	    	    repository.findAll().forEach(vagas::add);
@@ -48,11 +48,11 @@ public class VagaControler {
 	}
 
     @PostMapping("/vaga")
-	public ResponseEntity<Vaga> postVaga(@RequestBody Vaga vaga) {
+	public ResponseEntity<Job> postVaga(@RequestBody Job vaga) {
 	    try {
-	    	Vaga dados_vaga = repository
+	    	Job dados_vaga = repository
 	            .save(
-                    new Vaga(vaga.getTitulo(), vaga.getDescricao())
+                    new Job(vaga.getTitle(), vaga.getDescription())
                 );
 	        return new ResponseEntity<>(dados_vaga, HttpStatus.CREATED);
 	    } catch (Exception e) {
@@ -61,13 +61,13 @@ public class VagaControler {
 	}
 
     @PutMapping("/vaga/{id}")
-	public ResponseEntity<Vaga> putVaga(@PathVariable("id") long id, @RequestBody Vaga vaga) {
-	    Optional<Vaga> dados_vaga = repository.findById(id);
+	public ResponseEntity<Job> putVaga(@PathVariable("id") long id, @RequestBody Job vaga) {
+	    Optional<Job> dados_vaga = repository.findById(id);
 
 	    if (dados_vaga.isPresent()) {
-	    	Vaga _vaga = dados_vaga.get();
-	    	_vaga.setTitulo(vaga.getTitulo());
-	    	_vaga.setDescricao(vaga.getDescricao());
+	    	Job _vaga = dados_vaga.get();
+	    	_vaga.setTitle(vaga.getTitle());
+	    	_vaga.setDescription(vaga.getDescription());
 	        return new ResponseEntity<>(repository.save(_vaga), HttpStatus.OK);
 	    } else {
 	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);

@@ -7,8 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.br.foliveira.recrutamento_interno.model.Usuario;
-import com.br.foliveira.recrutamento_interno.repository.IUsuarioRepository;
+import com.br.foliveira.recrutamento_interno.model.User;
+import com.br.foliveira.recrutamento_interno.repository.IUserRepository;
 
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -20,43 +20,43 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 @CrossOrigin(origins = "http://localhost:8081")
-public class UsuarioController {
+public class UserController {
     
     @Autowired
-    IUsuarioRepository repository;
+    IUserRepository repository;
 
     @GetMapping("/usuario/{id}")
-    public ResponseEntity<Usuario> getUsuario(@PathVariable("id") long id) {
-        Optional<Usuario> dados_usuario = repository.findById(id);
-        if (dados_usuario.isPresent()) {
-	        return new ResponseEntity<>(dados_usuario.get(), HttpStatus.OK);
+    public ResponseEntity<User> getUser(@PathVariable("id") long id) {
+        Optional<User> user_data = repository.findById(id);
+        if (user_data.isPresent()) {
+	        return new ResponseEntity<>(user_data.get(), HttpStatus.OK);
 	    } else {
 	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
     }
     
     @PostMapping("/usuario")
-	public ResponseEntity<Usuario> postUsuario(@RequestBody Usuario usuario) {
+	public ResponseEntity<User> postUsuario(@RequestBody User user) {
 	    try {
-	    	Usuario dados_usuario = repository
+	    	User user_data = repository
 	            .save(
-                    new Usuario(usuario.getNome(), usuario.getEmail())
+                    new User(user.getName(), user.getEmail())
                 );
-	        return new ResponseEntity<>(dados_usuario, HttpStatus.CREATED);
+	        return new ResponseEntity<>(user_data, HttpStatus.CREATED);
 	    } catch (Exception e) {
 	        return new ResponseEntity<>(null, HttpStatus.EXPECTATION_FAILED);
 	    }
 	}
 
     @PutMapping("/usuario/{id}")
-	public ResponseEntity<Usuario> putUsuario(@PathVariable("id") long id, @RequestBody Usuario usuario) {
-	    Optional<Usuario> usuario_data = repository.findById(id);
+	public ResponseEntity<User> putUsuario(@PathVariable("id") long id, @RequestBody User user) {
+	    Optional<User> user_data = repository.findById(id);
 
-	    if (usuario_data.isPresent()) {
-	    	Usuario _usuario = usuario_data.get();
-	    	_usuario.setNome(usuario.getNome());
-	    	_usuario.setEmail(usuario.getEmail());
-	        return new ResponseEntity<>(repository.save(_usuario), HttpStatus.OK);
+	    if (user_data.isPresent()) {
+	    	User _user = user_data.get();
+	    	_user.setName(user.getName());
+	    	_user.setEmail(user.getEmail());
+	        return new ResponseEntity<>(repository.save(_user), HttpStatus.OK);
 	    } else {
 	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
