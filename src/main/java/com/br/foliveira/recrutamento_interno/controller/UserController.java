@@ -1,7 +1,5 @@
 package com.br.foliveira.recrutamento_interno.controller;
 
-import java.util.Optional;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,22 +39,18 @@ public class UserController {
                 );
 	        return new ResponseEntity<>(user_data, HttpStatus.CREATED);
 	    } catch (Exception e) {
-	        return new ResponseEntity<>(null, HttpStatus.EXPECTATION_FAILED);
+	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
 
     @PutMapping("/usuario/{id}")
 	public ResponseEntity<User> putUser(@PathVariable("id") long id, @RequestBody User user) {
-	    Optional<User> user_data = repository.findById(id);
-
-	    if (user_data.isPresent()) {
-	    	User temp_user_data = user_data.get();
-	    	temp_user_data.setName(user.getName());
-	    	temp_user_data.setEmail(user.getEmail());
-	        return new ResponseEntity<>(repository.save(temp_user_data), HttpStatus.OK);
-	    } else {
-	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-	    }
+	    return repository.findById(id)
+			.map(user_updated -> {
+				user_updated.setName(user.getName());
+				user_updated.setEmail(user.getEmail());
+				return new ResponseEntity<>(repository.save(user_updated), HttpStatus.OK);
+			}).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
     @DeleteMapping("/usuario/{id}")

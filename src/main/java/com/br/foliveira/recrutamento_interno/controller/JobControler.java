@@ -29,22 +29,16 @@ public class JobControler {
 
     @GetMapping("/vaga")
     ResponseEntity<List<Job>> getAllJobs(@RequestParam(required = false) String title) {
-	    try {
-	        List<Job> jobs_data = new ArrayList<Job>();
+	    List<Job> jobs = new ArrayList<>();
+		if(title == null){
+			repository.findAll().forEach(jobs::add);
+		}else{
+			repository.findByTitleContaining(title).forEach(jobs::add);
+		}
 
-	        if (title == null)
-	    	    repository.findAll().forEach(jobs_data::add);
-	        else
-	    	    repository.findByTitleContaining(title).forEach(jobs_data::add);
-
-	        if (jobs_data.isEmpty()) {
-	            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-	        }
-
-	        return new ResponseEntity<>(jobs_data, HttpStatus.OK);
-	    } catch (Exception e) {
-	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
-	    }
+		return jobs.isEmpty() ? 
+			new ResponseEntity<>(HttpStatus.NO_CONTENT)
+			: new ResponseEntity<>(jobs, HttpStatus.OK);
 	}
 
 	@GetMapping("/vaga/{id}")
@@ -68,10 +62,10 @@ public class JobControler {
     @PutMapping("/vaga/{id}")
 	public ResponseEntity<Job> putJob(@PathVariable("id") long id, @RequestBody Job job) {
 		return repository.findById(id)
-			.map(jobUpdated -> {
-				jobUpdated.setTitle(job.getTitle());
-				jobUpdated.setDescription(job.getDescription());
-				return new ResponseEntity<>(repository.save(jobUpdated), HttpStatus.OK);
+			.map(job_updated -> {
+				job_updated.setTitle(job.getTitle());
+				job_updated.setDescription(job.getDescription());
+				return new ResponseEntity<>(repository.save(job_updated), HttpStatus.OK);
 			}).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
