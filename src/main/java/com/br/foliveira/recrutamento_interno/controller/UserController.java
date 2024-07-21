@@ -23,20 +23,17 @@ import org.springframework.web.bind.annotation.RequestBody;
 public class UserController {
     
     @Autowired
-    IUserRepository repository;
+    private IUserRepository repository;
 
     @GetMapping("/usuario/{id}")
-    public ResponseEntity<User> getUser(@PathVariable("id") long id) {
-        Optional<User> user_data = repository.findById(id);
-        if (user_data.isPresent()) {
-	        return new ResponseEntity<>(user_data.get(), HttpStatus.OK);
-	    } else {
-	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-	    }
+    public ResponseEntity<User> getUserById(@PathVariable("id") long id) {
+        return repository.findById(id)
+			.map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+			.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
     
     @PostMapping("/usuario")
-	public ResponseEntity<User> postUsuario(@RequestBody User user) {
+	public ResponseEntity<User> postUser(@RequestBody User user) {
 	    try {
 	    	User user_data = repository
 	            .save(
@@ -49,26 +46,26 @@ public class UserController {
 	}
 
     @PutMapping("/usuario/{id}")
-	public ResponseEntity<User> putUsuario(@PathVariable("id") long id, @RequestBody User user) {
+	public ResponseEntity<User> putUser(@PathVariable("id") long id, @RequestBody User user) {
 	    Optional<User> user_data = repository.findById(id);
 
 	    if (user_data.isPresent()) {
-	    	User _user = user_data.get();
-	    	_user.setName(user.getName());
-	    	_user.setEmail(user.getEmail());
-	        return new ResponseEntity<>(repository.save(_user), HttpStatus.OK);
+	    	User temp_user_data = user_data.get();
+	    	temp_user_data.setName(user.getName());
+	    	temp_user_data.setEmail(user.getEmail());
+	        return new ResponseEntity<>(repository.save(temp_user_data), HttpStatus.OK);
 	    } else {
 	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
 	    }
 	}
 
     @DeleteMapping("/usuario/{id}")
-	public ResponseEntity<HttpStatus> deleteUsuario(@PathVariable("id") long id) {
-	    try {
+	public ResponseEntity<Void> deleteUser(@PathVariable("id") long id) {		
+		try {
 	        repository.deleteById(id);
 	        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	    } catch (Exception e) {
-	        return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
+	        return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
 }

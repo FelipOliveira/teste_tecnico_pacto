@@ -2,7 +2,6 @@ package com.br.foliveira.recrutamento_interno.controller;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -25,57 +24,59 @@ import org.springframework.web.bind.annotation.RequestParam;
 @CrossOrigin(origins = "http://localhost:8081")
 public class JobControler {
     
-    @Autowired IJobRepository repository;
+    @Autowired 
+	private IJobRepository repository;
 
     @GetMapping("/vaga")
-    ResponseEntity<List<Job>> getVagas(@RequestParam(required = false) String titulo) {
+    ResponseEntity<List<Job>> getAllJobs(@RequestParam(required = false) String title) {
 	    try {
-	        List<Job> vagas = new ArrayList<Job>();
+	        List<Job> jobs_data = new ArrayList<Job>();
 
-	        if (titulo == null)
-	    	    repository.findAll().forEach(vagas::add);
+	        if (title == null)
+	    	    repository.findAll().forEach(jobs_data::add);
 	        else
-	    	    //repository.findByNameContaining(titulo).forEach(vagas::add);
+	    	    repository.findByTitleContaining(title).forEach(jobs_data::add);
 
-	        if (vagas.isEmpty()) {
+	        if (jobs_data.isEmpty()) {
 	            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	        }
 
-	        return new ResponseEntity<>(vagas, HttpStatus.OK);
+	        return new ResponseEntity<>(jobs_data, HttpStatus.OK);
 	    } catch (Exception e) {
 	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
 
+	@GetMapping("/vaga/{id}")
+	public ResponseEntity<Job> getJobById(@PathVariable("id") long id) {
+		return repository.findById(id)
+			.map(job -> new ResponseEntity<>(job, HttpStatus.OK))
+			.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+	}
+	
+
     @PostMapping("/vaga")
-	public ResponseEntity<Job> postVaga(@RequestBody Job vaga) {
-	    try {
-	    	Job dados_vaga = repository
-	            .save(
-                    new Job(vaga.getTitle(), vaga.getDescription())
-                );
-	        return new ResponseEntity<>(dados_vaga, HttpStatus.CREATED);
+	public ResponseEntity<Job> postJob(@RequestBody Job job) {	
+		try {
+			Job job_data = repository.save(new Job(job.getTitle(), job.getDescription()));
+			return new ResponseEntity<>(job_data, HttpStatus.CREATED);
 	    } catch (Exception e) {
-	        return new ResponseEntity<>(null, HttpStatus.EXPECTATION_FAILED);
+	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
 
     @PutMapping("/vaga/{id}")
-	public ResponseEntity<Job> putVaga(@PathVariable("id") long id, @RequestBody Job vaga) {
-	    Optional<Job> dados_vaga = repository.findById(id);
-
-	    if (dados_vaga.isPresent()) {
-	    	Job _vaga = dados_vaga.get();
-	    	_vaga.setTitle(vaga.getTitle());
-	    	_vaga.setDescription(vaga.getDescription());
-	        return new ResponseEntity<>(repository.save(_vaga), HttpStatus.OK);
-	    } else {
-	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-	    }
+	public ResponseEntity<Job> putJob(@PathVariable("id") long id, @RequestBody Job job) {
+		return repository.findById(id)
+			.map(jobUpdated -> {
+				jobUpdated.setTitle(job.getTitle());
+				jobUpdated.setDescription(job.getDescription());
+				return new ResponseEntity<>(repository.save(jobUpdated), HttpStatus.OK);
+			}).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
     @DeleteMapping("/vaga/{id}")
-	public ResponseEntity<HttpStatus> deleteVaga(@PathVariable("id") long id) {
+	public ResponseEntity<HttpStatus> deleteJobById(@PathVariable("id") long id) {
 	    try {
 	        repository.deleteById(id);
 	        return new ResponseEntity<>(HttpStatus.NO_CONTENT);

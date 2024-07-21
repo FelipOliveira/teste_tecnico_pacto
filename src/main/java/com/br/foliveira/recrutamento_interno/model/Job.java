@@ -19,7 +19,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "t_vagas")
+@Table(name = "t_jobs")
 @Getter
 @Setter
 @NoArgsConstructor
