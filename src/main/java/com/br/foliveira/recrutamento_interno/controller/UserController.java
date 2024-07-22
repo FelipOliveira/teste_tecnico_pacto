@@ -33,11 +33,11 @@ public class UserController {
     @PostMapping("/usuario")
 	public ResponseEntity<User> postUser(@RequestBody User user) {
 	    try {
-	    	User user_data = repository
+	    	User userData = repository
 	            .save(
-                    new User(user.getName(), user.getEmail())
+                    new User(user.getName(), user.getEmail(), user.getJobs())
                 );
-	        return new ResponseEntity<>(user_data, HttpStatus.CREATED);
+	        return new ResponseEntity<>(userData, HttpStatus.CREATED);
 	    } catch (Exception e) {
 	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
@@ -46,10 +46,11 @@ public class UserController {
     @PutMapping("/usuario/{id}")
 	public ResponseEntity<User> putUser(@PathVariable("id") long id, @RequestBody User user) {
 	    return repository.findById(id)
-			.map(user_updated -> {
-				user_updated.setName(user.getName());
-				user_updated.setEmail(user.getEmail());
-				return new ResponseEntity<>(repository.save(user_updated), HttpStatus.OK);
+			.map(updatedUser -> {
+				updatedUser.setName(user.getName());
+				updatedUser.setEmail(user.getEmail());
+				updatedUser.setJobs(user.getJobs());
+				return new ResponseEntity<>(repository.save(updatedUser), HttpStatus.OK);
 			}).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 

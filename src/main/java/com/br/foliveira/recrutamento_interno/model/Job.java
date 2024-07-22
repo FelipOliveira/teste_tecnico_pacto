@@ -25,13 +25,10 @@ import lombok.ToString;
 @NoArgsConstructor
 @ToString
 public class Job {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
-
-    private String title;
-    
+    private String title;   
     private String description;
     
     @ManyToMany(fetch = FetchType.LAZY,
@@ -43,8 +40,9 @@ public class Job {
     @JsonIgnore
     private Set<User> users = new HashSet<>();
 
-    public Job(String title, String description){
+    public Job(String title, String description, Set<User> users){
         this.title = title;
         this.description = description;
+        this.users = users;
     }
 }

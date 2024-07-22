@@ -2,6 +2,7 @@ package com.br.foliveira.recrutamento_interno.controller;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,7 +12,10 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.br.foliveira.recrutamento_interno.model.Job;
+import com.br.foliveira.recrutamento_interno.model.User;
 import com.br.foliveira.recrutamento_interno.repository.IJobRepository;
+import com.br.foliveira.recrutamento_interno.repository.IUserRepository;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -25,15 +29,18 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class JobControler {
     
     @Autowired 
-	private IJobRepository repository;
+	private IJobRepository jobRepository;
 
-    @GetMapping("/vaga")
+	@Autowired
+	private IUserRepository userRepository;
+
+    @GetMapping("/jobs")
     ResponseEntity<List<Job>> getAllJobs(@RequestParam(required = false) String title) {
 	    List<Job> jobs = new ArrayList<>();
 		if(title == null){
-			repository.findAll().forEach(jobs::add);
+			jobRepository.findAll().forEach(jobs::add);
 		}else{
-			repository.findByTitleContaining(title).forEach(jobs::add);
+			jobRepository.findByTitleContaining(title).forEach(jobs::add);
 		}
 
 		return jobs.isEmpty() ? 
@@ -41,38 +48,65 @@ public class JobControler {
 			: new ResponseEntity<>(jobs, HttpStatus.OK);
 	}
 
-	@GetMapping("/vaga/{id}")
+	@GetMapping("/job/{id}")
 	public ResponseEntity<Job> getJobById(@PathVariable("id") long id) {
-		return repository.findById(id)
+		return jobRepository.findById(id)
 			.map(job -> new ResponseEntity<>(job, HttpStatus.OK))
 			.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 	
 
-    @PostMapping("/vaga")
-	public ResponseEntity<Job> postJob(@RequestBody Job job) {	
+    @PostMapping("/job")
+	public ResponseEntity<Job> postJob(@RequestBody Job jobRequest) {	
 		try {
-			Job job_data = repository.save(new Job(job.getTitle(), job.getDescription()));
-			return new ResponseEntity<>(job_data, HttpStatus.CREATED);
+			Job jobData = jobRepository.save(new Job(jobRequest.getTitle(), jobRequest.getDescription(), jobRequest.getUsers()));
+			return new ResponseEntity<>(jobData, HttpStatus.CREATED);
 	    } catch (Exception e) {
 	        return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
 	    }
 	}
 
-    @PutMapping("/vaga/{id}")
+	@PostMapping("/user/{userId}/jobs")
+	public ResponseEntity<Job> addJobToUser(@PathVariable(value = "userId")
+	Long userId, @RequestBody Job jobRequest) throws Exception {
+		Job jobData = userRepository.findById(userId).map(user -> {
+			Set<Job> jobs = userRepository.findById(userId).get().getJobs();
+			if (!jobs.contains(jobRequest)) {
+				user.addJob(jobRequest);
+				return jobRepository.save(jobRequest);
+			}
+			return jobRequest;
+		}).orElseThrow(() -> new Exception());
+
+		return new ResponseEntity<>(jobData, HttpStatus.CREATED);
+	}
+
+    @PutMapping("/job/{id}")
 	public ResponseEntity<Job> putJob(@PathVariable("id") long id, @RequestBody Job job) {
-		return repository.findById(id)
-			.map(job_updated -> {
-				job_updated.setTitle(job.getTitle());
-				job_updated.setDescription(job.getDescription());
-				return new ResponseEntity<>(repository.save(job_updated), HttpStatus.OK);
+		return jobRepository.findById(id)
+			.map(updatedJob -> {
+				updatedJob.setTitle(job.getTitle());
+				updatedJob.setDescription(job.getDescription());
+				updatedJob.setUsers(job.getUsers());
+				return new ResponseEntity<>(jobRepository.save(updatedJob), HttpStatus.OK);
 			}).orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 
-    @DeleteMapping("/vaga/{id}")
+	@DeleteMapping("/user/{userId}/jobs/{jobId}")
+	public ResponseEntity<HttpStatus> removeJobFromUser(@PathVariable(value = "userId") Long userId,
+	@PathVariable(value = "jobId") Long jobId) throws Exception {
+		User user = userRepository.findById(userId)
+			.orElseThrow(() -> new Exception());
+		user.removeJob(jobId);
+		userRepository.save(user);
+		
+		return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+	}
+
+    @DeleteMapping("/job/{id}")
 	public ResponseEntity<HttpStatus> deleteJobById(@PathVariable("id") long id) {
 	    try {
-	        repository.deleteById(id);
+	        jobRepository.deleteById(id);
 	        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
 	    } catch (Exception e) {
 	        return new ResponseEntity<>(HttpStatus.EXPECTATION_FAILED);
